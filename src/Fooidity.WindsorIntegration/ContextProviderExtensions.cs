@@ -11,10 +11,10 @@
         /// Register a default context provider that returns false for any attempts to 
         /// access the context type.
         /// </summary>
-        /// <param name="builder"></param>
-        public static void RegisterDefaultContextProvider(this IWindsorContainer builder)
+        /// <param name="container"></param>
+        public static void RegisterDefaultContextProvider(this IWindsorContainer container)
         {
-            builder.Register(Component.For(typeof(ContextProvider<,>)).ImplementedBy(typeof(DefaultContextProvider<,>)));
+            container.Register(Component.For(typeof(ContextProvider<,>)).ImplementedBy(typeof(DefaultContextProvider<,>)));
         }
 
         /// <summary>
@@ -22,12 +22,12 @@
         /// </summary>
         /// <typeparam name="TInput"></typeparam>
         /// <typeparam name="TContext"></typeparam>
-        /// <param name="builder"></param>
+        /// <param name="container"></param>
         /// <param name="selector"></param>
-        public static void RegisterContextProvider<TInput, TContext>(this IWindsorContainer builder, Func<TInput, TContext?> selector)
+        public static void RegisterContextProvider<TInput, TContext>(this IWindsorContainer container, Func<TInput, TContext?> selector)
             where TContext : struct
         {
-            builder.Register(Component.For<ContextProvider<TInput, TContext>>()
+            container.Register(Component.For<ContextProvider<TInput, TContext>>()
                 .UsingFactoryMethod(_ => new ValueTypeContextProvider<TInput, TContext>(selector)));
         }
 
@@ -36,12 +36,12 @@
         /// </summary>
         /// <typeparam name="TInput"></typeparam>
         /// <typeparam name="TContext"></typeparam>
-        /// <param name="builder"></param>
+        /// <param name="container"></param>
         /// <param name="selector"></param>
-        public static void RegisterContextProvider<TInput, TContext>(this IWindsorContainer builder, Func<TInput, TContext> selector)
+        public static void RegisterContextProvider<TInput, TContext>(this IWindsorContainer container, Func<TInput, TContext> selector)
             where TContext : class
         {
-            builder.Register(Component.For<ContextProvider<TInput, TContext>>()
+            container.Register(Component.For<ContextProvider<TInput, TContext>>()
                 .UsingFactoryMethod(_=>new ObjectContextProvider<TInput,TContext>(selector)));
         }
     }

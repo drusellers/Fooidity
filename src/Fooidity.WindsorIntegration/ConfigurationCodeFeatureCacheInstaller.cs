@@ -5,8 +5,6 @@
     using Castle.MicroKernel.SubSystems.Configuration;
     using Castle.Windsor;
     using Configuration;
-    using Events;
-
 
     public class ConfigurationCodeFeatureCacheInstaller : 
         IWindsorInstaller
@@ -14,7 +12,7 @@
         public void Install(IWindsorContainer container, IConfigurationStore store)
         {
             container.Register(
-                Component.For<ICodeFeatureStateCache, IUpdateCache<CodeFeatureStateUpdated>,IReloadCache>()
+                Component.For<ICodeFeatureStateCache, IUpdateCodeFeatureCache, IReloadCache>()
                 .ImplementedBy<CodeFeatureStateCache>()
                 .Named("codeFeatureCache")
                 .LifestyleSingleton(),

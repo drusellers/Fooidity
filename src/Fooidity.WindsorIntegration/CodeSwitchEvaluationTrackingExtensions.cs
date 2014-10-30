@@ -5,15 +5,15 @@
     using Castle.MicroKernel.Registration;
     using Castle.MicroKernel.Resolvers.SpecializedResolvers;
     using Castle.Windsor;
-    using Events;
+    using Contracts;
 
 
     public static class CodeSwitchEvaluationTrackingExtensions
     {
-        public static void EnableCodeSwitchTracking(this IWindsorContainer builder)
+        public static void EnableCodeSwitchTracking(this IWindsorContainer container)
         {
-            builder.Kernel.Resolver.AddSubResolver(new CollectionResolver(builder.Kernel,true));
-            builder.Register(
+            container.Kernel.Resolver.AddSubResolver(new CollectionResolver(container.Kernel,true));
+            container.Register(
                 Component.For<ICodeSwitchesEvaluated, IObserver<CodeSwitchEvaluated>>()
                 .ImplementedBy<CodeSwitchEvaluationObserver>()
                 .LifeStyle.Scoped() //instance per lifetime scope

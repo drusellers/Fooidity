@@ -2,12 +2,11 @@
 {
     using System;
     using System.Collections.Generic;
-    using AutofacIntegration;
     using Castle.MicroKernel.Lifestyle;
     using Castle.MicroKernel.Registration;
     using Castle.Windsor;
     using Contexts;
-    using Events;
+    using Contracts;
     using Features;
     using NUnit.Framework;
 
@@ -48,7 +47,7 @@
                 IEnumerable<CodeSwitchEvaluated> codeSwitchesEvaluated = _container.GetCodeSwitchesEvaluated();
 
                 foreach (CodeSwitchEvaluated evaluated in codeSwitchesEvaluated)
-                    Console.WriteLine("{0}: {1}", evaluated.Id, evaluated.Enabled);
+                    Console.WriteLine("{0}: {1}", evaluated.CodeFeatureId, evaluated.Enabled);
             }
         }
 
@@ -66,7 +65,7 @@
                 IEnumerable<CodeSwitchEvaluated> codeSwitchesEvaluated = _container.GetCodeSwitchesEvaluated();
 
                 foreach (CodeSwitchEvaluated evaluated in codeSwitchesEvaluated)
-                    Console.WriteLine("{0}: {1}", evaluated.Id, evaluated.Enabled);
+                    Console.WriteLine("{0}: {1}", evaluated.CodeFeatureId, evaluated.Enabled);
             }
         }
 

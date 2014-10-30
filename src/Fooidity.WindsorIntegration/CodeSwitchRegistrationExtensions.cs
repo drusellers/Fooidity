@@ -5,7 +5,7 @@
     using Castle.MicroKernel.Registration;
     using Castle.Windsor;
     using CodeSwitches;
-    using Events;
+    using Contracts;
 
 
     public static class CodeSwitchRegistrationExtensions
@@ -14,10 +14,10 @@
         /// By default, all code switches that are not explicitly registered will use a default implementation
         /// that is disabled.
         /// </summary>
-        /// <param name="builder"></param>
-        public static void DisableCodeSwitchesByDefault(this IWindsorContainer builder)
+        /// <param name="container"></param>
+        public static void DisableCodeSwitchesByDefault(this IWindsorContainer container)
         {
-            builder.Register(
+            container.Register(
                 Component.For(typeof(CodeSwitch<>))
                     .ImplementedBy(typeof(DisabledCodeSwitch<>))
                     .OnCreate((k,t)=>OnCodeSwitchActivation(k,(IObservable<CodeSwitchEvaluated>)t))
@@ -28,10 +28,10 @@
         /// By default, all code switches that are not explicitly registered will use a default implementation
         /// that is enabled.
         /// </summary>
-        /// <param name="builder"></param>
-        public static void EnableCodeSwitchesByDefault(this IWindsorContainer builder)
+        /// <param name="container"></param>
+        public static void EnableCodeSwitchesByDefault(this IWindsorContainer container)
         {
-            builder.Register(
+            container.Register(
                 Component.For(typeof(CodeSwitch<>))
                     .ImplementedBy(typeof(EnabledCodeSwitch<>))
                     .OnCreate((k, t) => OnCodeSwitchActivation(k, (IObservable<CodeSwitchEvaluated>)t))
@@ -42,11 +42,11 @@
         /// Register the specified CodeSwitch as enabled in the container
         /// </summary>
         /// <typeparam name="TFeature">The CodeSwitch type</typeparam>
-        /// <param name="builder">The container builder to register</param>
-        public static void RegisterEnabled<TFeature>(this IWindsorContainer builder)
+        /// <param name="container">The container container to register</param>
+        public static void RegisterEnabled<TFeature>(this IWindsorContainer container)
             where TFeature : struct, CodeFeature
         {
-            builder.Register(
+            container.Register(
                 Component.For<CodeSwitch<TFeature>>()
                 .ImplementedBy<EnabledCodeSwitch<TFeature>>()
                     .OnCreate(OnCodeSwitchActivation)
@@ -57,11 +57,11 @@
         /// Register the specified CodeSwitch as disabled in the container
         /// </summary>
         /// <typeparam name="TFeature">The CodeSwitch type</typeparam>
-        /// <param name="builder">The container builder to register</param>
-        public static void RegisterDisabled<TFeature>(this IWindsorContainer builder)
+        /// <param name="container">The container container to register</param>
+        public static void RegisterDisabled<TFeature>(this IWindsorContainer container)
             where TFeature : struct, CodeFeature
         {
-            builder.Register(
+            container.Register(
                 Component.For<CodeSwitch<TFeature>>()
                 .Named(Guid.NewGuid().ToString())
                 .ImplementedBy<DisabledCodeSwitch<TFeature>>()
@@ -109,12 +109,12 @@
         /// Registers a toggle switch with a shared toggle state 
         /// </summary>
         /// <typeparam name="TFeature">The code feature</typeparam>
-        /// <param name="builder">The container builder</param>
+        /// <param name="container">The container container</param>
         /// <param name="enabled">True if the toggle should be enabled initially</param>
-        public static void RegisterToggle<TFeature>(this IWindsorContainer builder, bool enabled = false)
+        public static void RegisterToggle<TFeature>(this IWindsorContainer container, bool enabled = false)
             where TFeature : struct, CodeFeature
         {
-            builder.Register(
+            container.Register(
                 Component.For<IToggleSwitchState<TFeature>>()
                     .UsingFactoryMethod(_ => new ToggleSwitchState<TFeature>(enabled))
                     .LifestyleSingleton(),
@@ -126,10 +126,10 @@
                 );
         }
 
-        public static void RegisterCodeSwitch<TFeature>(this IWindsorContainer builder)
+        public static void RegisterCodeSwitch<TFeature>(this IWindsorContainer container)
             where TFeature : struct, CodeFeature
         {
-            builder.Register(
+            container.Register(
                 Component.For<CodeSwitch<TFeature>>()
                 .ImplementedBy<CodeFeatureStateCodeSwitch<TFeature>>()
                    .OnCreate(OnCodeSwitchActivation)
@@ -137,24 +137,24 @@
         }
 
         /// <summary>
-        /// Register a context switch for the feature that uses the context to determine if the switch
-        /// is enabled for that particular context.
+        /// Register a kernel switch for the feature that uses the kernel to determine if the switch
+        /// is enabled for that particular kernel.
         /// </summary>
         /// <typeparam name="TFeature">The code feature</typeparam>
-        /// <typeparam name="TContext">The switch context</typeparam>
-        /// <param name="builder"></param>
-        /// <param name="throwIfContextNotFound">If the context is not available, throw an exception</param>
-        public static void RegisterContextSwitch<TFeature, TContext>(this IWindsorContainer builder, bool throwIfContextNotFound = true)
+        /// <typeparam name="TContext">The switch kernel</typeparam>
+        /// <param name="container"></param>
+        /// <param name="throwIfContextNotFound">If the kernel is not available, throw an exception</param>
+        public static void RegisterContextSwitch<TFeature, TContext>(this IWindsorContainer container, bool throwIfContextNotFound = true)
             where TFeature : struct, CodeFeature
         {
-            builder.Register(
+            container.Register(
                 Component.For<CodeSwitch<TFeature>>().UsingFactoryMethod<CodeSwitch<TFeature>>(kernel =>
                 {
 
                     if (!kernel.HasComponent(typeof(TContext)))
                     {
                         if (throwIfContextNotFound)
-                            throw new ContextSwitchException("The context type was not found: " + typeof(TContext).Name);
+                            throw new ContextSwitchException("The kernel type was not found: " + typeof(TContext).Name);
 
                         return new CodeFeatureStateCodeSwitch<TFeature>(kernel.Resolve<ICodeFeatureStateCache>());
                     }
@@ -169,9 +169,9 @@
 
         }
 
-        static void OnCodeSwitchActivation(IKernel context, IObservable<CodeSwitchEvaluated> observable)
+        static void OnCodeSwitchActivation(IKernel kernel, IObservable<CodeSwitchEvaluated> observable)
         {
-            var observers = context.ResolveAll<IObserver<CodeSwitchEvaluated>>();
+            var observers = kernel.ResolveAll<IObserver<CodeSwitchEvaluated>>();
 
             foreach (var observer in observers)
                 observable.Subscribe(observer);

@@ -2,7 +2,6 @@
 {
     using System;
     using System.Linq;
-    using Events;
     using Features;
     using NUnit.Framework;
 
@@ -11,6 +10,7 @@
         using Castle.MicroKernel.Lifestyle;
         using Castle.MicroKernel.Registration;
         using Castle.Windsor;
+        using Contracts;
 
 
         interface ILogger
@@ -33,7 +33,7 @@
             {
                 CodeSwitchEvaluated[] switches = _evaluated.ToArray();
 
-                Console.WriteLine("{0}\n{1}", exception.Message, string.Join(Environment.NewLine, switches.Select(x => x.Id)));
+                Console.WriteLine("{0}\n{1}", exception.Message, string.Join(Environment.NewLine, switches.Select(x => x.CodeFeatureId)));
             }
         }
 
