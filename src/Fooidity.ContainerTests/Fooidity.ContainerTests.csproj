@@ -39,12 +39,22 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Autofac.3.5.2\lib\net40\Autofac.dll</HintPath>
     </Reference>
+    <Reference Include="Castle.Core">
+      <HintPath>..\packages\Castle.Core.3.3.0\lib\net45\Castle.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Castle.Windsor">
+      <HintPath>..\packages\Castle.Windsor.3.3.0\lib\net45\Castle.Windsor.dll</HintPath>
+    </Reference>
     <Reference Include="nunit.framework, Version=2.6.3.13283, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
     </Reference>
+    <Reference Include="Shouldly">
+      <HintPath>..\packages\Shouldly.2.2.1\lib\net40\Shouldly.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\SolutionVersion.cs">
@@ -63,11 +73,20 @@
     <Compile Include="Features\UseNewCodePath.cs" />
     <Compile Include="Features\UseNewMethod.cs" />
     <Compile Include="Subjects\ConditionalClass.cs" />
+    <Compile Include="Windsor\Conditional_Specs.cs" />
+    <Compile Include="Windsor\ContainerSetup_Specs.cs" />
+    <Compile Include="Windsor\ContextContainer_Specs.cs" />
+    <Compile Include="Windsor\ExceptionLogging_Specs.cs" />
+    <Compile Include="Windsor\RegisterGeneric_Specs.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Fooidity.AutofacIntegration\Fooidity.AutofacIntegration.csproj">
       <Project>{9a495bbf-d575-4c4e-bd7d-52e5926d180d}</Project>
       <Name>Fooidity.AutofacIntegration</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Fooidity.WindsorIntegration\Fooidity.WindsorIntegration.csproj">
+      <Project>{ee3f29c8-38fb-4048-88c6-8ef5ca3694bf}</Project>
+      <Name>Fooidity.WindsorIntegration</Name>
     </ProjectReference>
     <ProjectReference Include="..\Fooidity\Fooidity.csproj">
       <Project>{e752a7e0-0d9e-4225-9bba-8cff8a963545}</Project>

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.30501.0
+VisualStudioVersion = 12.0.30723.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fooidity", "Fooidity\Fooidity.csproj", "{E752A7E0-0D9E-4225-9BBA-8CFF8A963545}"
 EndProject
@@ -26,6 +26,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fooidity.Management.Contracts", "Fooidity.Management.Contracts\Fooidity.Management.Contracts.csproj", "{A13612E2-CEFB-4FFD-85D8-169A957740EC}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fooidity.Management.Features", "Fooidity.Management.Features\Fooidity.Management.Features.csproj", "{B4B9DBF8-C695-46B9-97EC-2A2C3A974BD4}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fooidity.WindsorIntegration", "Fooidity.WindsorIntegration\Fooidity.WindsorIntegration.csproj", "{EE3F29C8-38FB-4048-88C6-8EF5CA3694BF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Containers", "Containers", "{9B7EDC66-8619-449A-84CE-24E2E2F1D0A1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -65,8 +68,16 @@ Global
 		{B4B9DBF8-C695-46B9-97EC-2A2C3A974BD4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B4B9DBF8-C695-46B9-97EC-2A2C3A974BD4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B4B9DBF8-C695-46B9-97EC-2A2C3A974BD4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{EE3F29C8-38FB-4048-88C6-8EF5CA3694BF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{EE3F29C8-38FB-4048-88C6-8EF5CA3694BF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{EE3F29C8-38FB-4048-88C6-8EF5CA3694BF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{EE3F29C8-38FB-4048-88C6-8EF5CA3694BF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9A495BBF-D575-4C4E-BD7D-52E5926D180D} = {9B7EDC66-8619-449A-84CE-24E2E2F1D0A1}
+		{EE3F29C8-38FB-4048-88C6-8EF5CA3694BF} = {9B7EDC66-8619-449A-84CE-24E2E2F1D0A1}
 	EndGlobalSection
 EndGlobal
