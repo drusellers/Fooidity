@@ -154,7 +154,7 @@
                     if (!kernel.HasComponent(typeof(TContext)))
                     {
                         if (throwIfContextNotFound)
-                            throw new ContextSwitchException("The kernel type was not found: " + typeof(TContext).Name);
+                            throw new ContextSwitchException("The context type was not found: " + typeof(TContext).Name);
 
                         return new CodeFeatureStateCodeSwitch<TFeature>(kernel.Resolve<ICodeFeatureStateCache>());
                     }

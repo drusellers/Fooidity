@@ -3,12 +3,15 @@
     using System;
     using System.Collections.Generic;
     using Castle.MicroKernel.Lifestyle;
+    using Castle.MicroKernel.Lifestyle.Scoped;
     using Castle.MicroKernel.Registration;
     using Castle.Windsor;
+    using Castle.Windsor.Configuration.Interpreters;
     using Contexts;
     using Contracts;
     using Features;
     using NUnit.Framework;
+    using Shouldly;
 
 
     [TestFixture]
@@ -30,23 +33,25 @@
         }
 
         [Test]
-        [Ignore("Need to research this for Windsor")]
+        //[Ignore("Need to research this for Windsor")]
         public void Should_be_enabled_for_specified_user()
         {
-            //using (var scope =_container.BeginLifetimeScope(x => x.RegisterInstance(new UserContext {Name = "Chris"})))
-            using (var scope =_container.BeginScope())
+            using (var scope = new WindsorContainer())
             {
-                var codeSwitch = _container.Resolve<CodeSwitch<UseNewCodePath>>();
+                _container.AddChildContainer(scope);
 
-                Assert.IsTrue(codeSwitch.Enabled);
+                scope.Register(Component.For<UserContext>().Instance(new UserContext {Name = "Chris"}));
+                var codeSwitch = scope.Resolve<CodeSwitch<UseNewCodePath>>();
 
-                var repository = _container.Resolve<Repository>();
+                codeSwitch.Enabled.ShouldBe(true);
 
-                Assert.AreEqual("No", repository.IsDbEnabled);
+                var repository = scope.Resolve<Repository>();
 
-                IEnumerable<CodeSwitchEvaluated> codeSwitchesEvaluated = _container.GetCodeSwitchesEvaluated();
+                repository.IsDbEnabled.ShouldBe("No");
 
-                foreach (CodeSwitchEvaluated evaluated in codeSwitchesEvaluated)
+                var codeSwitchesEvaluated = scope.GetCodeSwitchesEvaluated();
+
+                foreach (var evaluated in codeSwitchesEvaluated)
                     Console.WriteLine("{0}: {1}", evaluated.CodeFeatureId, evaluated.Enabled);
             }
         }
@@ -55,7 +60,7 @@
         [Ignore("Need to research this for Windsor")]
         public void Should_use_the_default_off_value()
         {
-            //using (var scope = _container.BeginS(x => x.RegisterInstance(new UserContext {Name = "David"})))
+            //using (var scope = _container.BeginScope(x => x.RegisterInstance(new UserContext {Name = "David"})))
             using (var scope = _container.BeginScope())
             {
                 var codeSwitch = _container.Resolve<CodeSwitch<UseNewCodePath>>();
@@ -80,7 +85,7 @@
         [TestFixtureSetUp]
         public void Setup()
         {
-            var _container = new WindsorContainer();
+            _container = new WindsorContainer();
 
             _container.Install(new ConfigurationCodeFeatureCacheInstaller());
             _container.Install(new ConfigurationContextFeatureCacheInstaller<UserContext, UserContextKeyProvider>());
