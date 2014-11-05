@@ -1,8 +1,10 @@
 ﻿namespace Fooidity.Caching
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
     using System.Threading;
-    using Configuration;
+    using System.Threading.Tasks;
     using Contracts;
     using Internals;
     using Metadata;
@@ -15,58 +17,58 @@
         IContextFeatureStateCache<TContext>,
         IReloadCache,
         IUpdateContextFeatureCache,
-        IObservable<ContextCodeFeatureStateCacheLoaded>,
-        IObservable<ContextCodeFeatureStateCacheUpdated>
+        IObservable<IContextCodeFeatureStateCacheLoaded>,
+        IObservable<IContextCodeFeatureStateCacheUpdated>
     {
-        readonly Connectable<IObserver<ContextCodeFeatureStateCacheLoaded>> _cacheLoaded;
+        readonly Connectable<IObserver<IContextCodeFeatureStateCacheLoaded>> _cacheLoaded;
         readonly IContextFeatureStateCacheProvider<TContext> _cacheProvider;
-        readonly Connectable<IObserver<ContextCodeFeatureStateCacheUpdated>> _cacheUpdated;
-        readonly ContextKeyProvider<TContext> _keyProvider;
+        readonly Connectable<IObserver<IContextCodeFeatureStateCacheUpdated>> _cacheUpdated;
+        readonly IContextKeyProvider<TContext> _keyProvider;
         IContextFeatureStateCacheInstance<TContext> _cache;
 
         public ContextFeatureStateCache(IContextFeatureStateCacheProvider<TContext> cacheProvider,
-            ContextKeyProvider<TContext> keyProvider)
+            IContextKeyProvider<TContext> keyProvider)
         {
             _cacheProvider = cacheProvider;
             _keyProvider = keyProvider;
 
-            _cacheLoaded = new Connectable<IObserver<ContextCodeFeatureStateCacheLoaded>>();
-            _cacheUpdated = new Connectable<IObserver<ContextCodeFeatureStateCacheUpdated>>();
+            _cacheLoaded = new Connectable<IObserver<IContextCodeFeatureStateCacheLoaded>>();
+            _cacheUpdated = new Connectable<IObserver<IContextCodeFeatureStateCacheUpdated>>();
 
-            _cache = _cacheProvider.Load();
+            _cache = Task.Run(async () => await LoadCache()).Result;
         }
 
-        public bool TryGetContextFeatureState(TContext context, out ContextFeatureState featureState)
+        public bool TryGetContextFeatureState(TContext context, out ICachedContextFeatureState featureState)
         {
             string key = _keyProvider.GetKey(context);
 
             return _cache.TryGetContextFeatureState(key, out featureState);
         }
 
-        public IDisposable Subscribe(IObserver<ContextCodeFeatureStateCacheLoaded> observer)
+        public IDisposable Subscribe(IObserver<IContextCodeFeatureStateCacheLoaded> observer)
         {
             return _cacheLoaded.Connect(observer);
         }
 
-        public IDisposable Subscribe(IObserver<ContextCodeFeatureStateCacheUpdated> observer)
+        public IDisposable Subscribe(IObserver<IContextCodeFeatureStateCacheUpdated> observer)
         {
             return _cacheUpdated.Connect(observer);
         }
 
-        public void ReloadCache()
+        public async Task ReloadCache()
         {
             DateTime startTime = DateTime.UtcNow;
-            IContextFeatureStateCacheInstance<TContext> cache = _cacheProvider.Load();
+            IContextFeatureStateCacheInstance<TContext> cache = await LoadCache();
             DateTime endTime = DateTime.UtcNow;
 
             Interlocked.Exchange(ref _cache, cache);
 
-            var loaded = new Loaded(startTime, endTime - startTime, cache.Count);
+            var loaded = new ContextCodeFeatureStateCacheLoaded(startTime, endTime - startTime, cache.Count);
 
             _cacheLoaded.ForEach(x => x.OnNext(loaded));
         }
 
-        public void UpdateCache(UpdateContextCodeFeature update)
+        public void UpdateCache(IUpdateContextCodeFeature update)
         {
             // ignore updates that aren't for this cache instance
             if (update.ContextId != ContextMetadata<TContext>.Id)
@@ -74,10 +76,10 @@
 
             CodeFeatureId codeFeatureId = update.CodeFeatureId;
 
-            ContextFeatureState existingContext;
-            if (_cache.TryGetContextFeatureState(update.Key, out existingContext))
+            ICachedContextFeatureState existingContext;
+            if (_cache.TryGetContextFeatureState(update.ContextKey, out existingContext))
             {
-                CodeFeatureState existingCode;
+                ICachedCodeFeatureState existingCode;
                 if (existingContext.TryGetCodeFeatureState(codeFeatureId, out existingCode))
                 {
                     if (existingCode.Enabled == update.Enabled)
@@ -92,162 +94,53 @@
                 AddContextFeatureState(update, codeFeatureId);
         }
 
-        void UpdateExistingCodeFeature(UpdateContextCodeFeature update, CodeFeatureId codeFeatureId, ContextFeatureState existingContext,
-            CodeFeatureState existingCode)
+        async Task<IContextFeatureStateCacheInstance<TContext>> LoadCache()
         {
-            var featureState = new CodeFeatureStateImpl(codeFeatureId, update.Enabled);
+            IEnumerable<Tuple<string, ICachedCodeFeatureState>> states = await _cacheProvider.Load();
+
+            var contextCache = new InMemoryCache<string, ICachedContextFeatureState>();
+            foreach (var context in states.GroupBy(x => x.Item1))
+                contextCache.TryAdd(context.Key, new CachedContextFeatureState(context.Select(x => x.Item2), context.Key));
+
+            return new ContextFeatureStateCacheInstance<TContext>(contextCache);
+        }
+
+        void UpdateExistingCodeFeature(IUpdateContextCodeFeature update, CodeFeatureId codeFeatureId,
+            ICachedContextFeatureState existingContext,
+            ICachedCodeFeatureState existingCode)
+        {
+            var featureState = new CachedCodeFeatureState(codeFeatureId, update.Enabled);
 
             bool updated = existingContext.TryUpdate(codeFeatureId, featureState, existingCode);
             if (updated)
                 NotifyUpdated(update, featureState);
         }
 
-        void AddCodeFeatureState(UpdateContextCodeFeature update, CodeFeatureId codeFeatureId, ContextFeatureState existingContext)
+        void AddCodeFeatureState(IUpdateContextCodeFeature update, CodeFeatureId codeFeatureId, ICachedContextFeatureState existingContext)
         {
-            var featureState = new CodeFeatureStateImpl(codeFeatureId, update.Enabled);
+            var featureState = new CachedCodeFeatureState(codeFeatureId, update.Enabled);
 
             bool updated = existingContext.TryAdd(codeFeatureId, featureState);
             if (updated)
                 NotifyUpdated(update, featureState);
         }
 
-        void AddContextFeatureState(UpdateContextCodeFeature update, CodeFeatureId codeFeatureId)
+        void AddContextFeatureState(IUpdateContextCodeFeature update, CodeFeatureId codeFeatureId)
         {
-            var featureState = new CodeFeatureStateImpl(codeFeatureId, update.Enabled);
-            var cache = new InMemoryCache<CodeFeatureId, CodeFeatureState>();
-            cache.TryAdd(codeFeatureId, featureState);
-            var contextFeatureState = new ContextFeatureStateImpl(cache, update.Key);
+            var featureState = new CachedCodeFeatureState(codeFeatureId, update.Enabled);
+            var contextFeatureState = new CachedContextFeatureState(Enumerable.Repeat(featureState, 1), update.ContextKey);
 
-            bool updated = _cache.TryAdd(update.Key, contextFeatureState);
+            bool updated = _cache.TryAdd(update.ContextKey, contextFeatureState);
             if (updated)
                 NotifyUpdated(update, featureState);
         }
 
-        void NotifyUpdated(UpdateContextCodeFeature update, CodeFeatureStateImpl updatedFeatureState)
+        void NotifyUpdated(IUpdateContextCodeFeature update, ICachedCodeFeatureState updatedFeatureState)
         {
-            var updatedEvent = new Updated(update.CommandId, update.ContextId, update.Key,
-                updatedFeatureState.Id, updatedFeatureState.Enabled);
+            var updatedEvent = new ContextCodeFeatureStateCacheUpdated(update.ContextId, update.ContextKey, updatedFeatureState.Id,
+                updatedFeatureState.Enabled, update.CommandId);
 
             _cacheUpdated.ForEach(x => x.OnNext(updatedEvent));
-        }
-
-
-        class Loaded :
-            ContextCodeFeatureStateCacheLoaded
-        {
-            readonly int _contextCount;
-            readonly TimeSpan _duration;
-            readonly Guid _eventId;
-            readonly Host _host;
-            readonly DateTime _timestamp;
-
-            public Loaded(DateTime timestamp, TimeSpan duration, int contextCount)
-            {
-                _eventId = Guid.NewGuid();
-                _timestamp = timestamp;
-                _duration = duration;
-                _contextCount = contextCount;
-                _host = HostMetadata.Host;
-            }
-
-            public Host Host
-            {
-                get { return _host; }
-            }
-
-            public Guid EventId
-            {
-                get { return _eventId; }
-            }
-
-            public DateTime Timestamp
-            {
-                get { return _timestamp; }
-            }
-
-            public TimeSpan Duration
-            {
-                get { return _duration; }
-            }
-
-            public int ContextCount
-            {
-                get { return _contextCount; }
-            }
-        }
-
-
-        class Updated :
-            ContextCodeFeatureStateCacheUpdated
-        {
-            readonly Uri _codeFeatureId;
-            readonly Guid? _commandId;
-            readonly Uri _contextId;
-            readonly string _contextKey;
-            readonly TimeSpan _duration;
-            readonly bool _enabled;
-            readonly Guid _eventId;
-            readonly Host _host;
-            readonly DateTime _timestamp;
-
-            public Updated(Guid? commandId, Uri contextId, string contextKey, Uri codeFeatureId,
-                bool enabled)
-            {
-                _eventId = Guid.NewGuid();
-                _timestamp = DateTime.UtcNow;
-                _duration = TimeSpan.Zero;
-                _commandId = commandId;
-                _contextId = contextId;
-                _contextKey = contextKey;
-                _codeFeatureId = codeFeatureId;
-                _enabled = enabled;
-                _host = HostMetadata.Host;
-            }
-
-            public bool Enabled
-            {
-                get { return _enabled; }
-            }
-
-            public Host Host
-            {
-                get { return _host; }
-            }
-
-            public Guid EventId
-            {
-                get { return _eventId; }
-            }
-
-            public DateTime Timestamp
-            {
-                get { return _timestamp; }
-            }
-
-            public TimeSpan Duration
-            {
-                get { return _duration; }
-            }
-
-            public Guid? CommandId
-            {
-                get { return _commandId; }
-            }
-
-            public Uri ContextId
-            {
-                get { return _contextId; }
-            }
-
-            public string ContextKey
-            {
-                get { return _contextKey; }
-            }
-
-            public Uri CodeFeatureId
-            {
-                get { return _codeFeatureId; }
-            }
         }
     }
 }

@@ -12,18 +12,17 @@
     /// Tracks the state of evaluated switches
     /// </summary>
     public class CodeSwitchEvaluationObserver :
-        IObserver<CodeSwitchEvaluated>,
-        ICodeSwitchEvaluationObserver,
+        IObserver<ICodeSwitchEvaluated>,
         ICodeSwitchesEvaluated
     {
-        readonly ConcurrentBag<CodeSwitchEvaluated> _events;
+        readonly ConcurrentBag<ICodeSwitchEvaluated> _events;
 
         public CodeSwitchEvaluationObserver()
         {
-            _events = new ConcurrentBag<CodeSwitchEvaluated>();
+            _events = new ConcurrentBag<ICodeSwitchEvaluated>();
         }
 
-        public IEnumerator<CodeSwitchEvaluated> GetEnumerator()
+        public IEnumerator<ICodeSwitchEvaluated> GetEnumerator()
         {
             return GetEvaluatedSwitches().GetEnumerator();
         }
@@ -33,12 +32,12 @@
             return GetEnumerator();
         }
 
-        public IEnumerable<CodeSwitchEvaluated> GetEvaluatedSwitches()
+        IEnumerable<ICodeSwitchEvaluated> GetEvaluatedSwitches()
         {
             return _events.OrderBy(x => x.Timestamp).ToArray();
         }
 
-        public void OnNext(CodeSwitchEvaluated value)
+        public void OnNext(ICodeSwitchEvaluated value)
         {
             _events.Add(value);
         }

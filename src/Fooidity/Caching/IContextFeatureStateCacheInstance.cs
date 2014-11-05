@@ -1,8 +1,5 @@
 ﻿namespace Fooidity.Caching
 {
-    using Configuration;
-
-
     public interface IContextFeatureStateCacheInstance<in TContext>
     {
         /// <summary>
@@ -16,7 +13,7 @@
         /// <param name="key"></param>
         /// <param name="featureState"></param>
         /// <returns></returns>
-        bool TryGetContextFeatureState(string key, out ContextFeatureState featureState);
+        bool TryGetContextFeatureState(string key, out ICachedContextFeatureState featureState);
 
         /// <summary>
         /// Try to add a context feature state to the cache
@@ -24,6 +21,6 @@
         /// <param name="key"></param>
         /// <param name="contextFeatureState"></param>
         /// <returns></returns>
-        bool TryAdd(string key, ContextFeatureState contextFeatureState);
+        bool TryAdd(string key, ICachedContextFeatureState contextFeatureState);
     }
 }

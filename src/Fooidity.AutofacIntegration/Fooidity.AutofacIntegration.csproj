@@ -46,14 +46,12 @@
     <Compile Include="..\SolutionVersion.cs">
       <Link>Properties\SolutionVersion.cs</Link>
     </Compile>
-    <Compile Include="AutofacFooIdContainer.cs" />
     <Compile Include="CodeSwitchEvaluationTrackingExtensions.cs" />
     <Compile Include="CodeSwitchRegistrationExtensions.cs" />
-    <Compile Include="ConfigurationCodeFeatureCacheModule.cs" />
-    <Compile Include="ConfigurationContextFeatureCacheModule.cs" />
     <Compile Include="ContainerBuilderExtensions.cs" />
     <Compile Include="ContextProviderExtensions.cs" />
-    <Compile Include="FooIdContainer.cs" />
+    <Compile Include="Modules\ConfigurationCodeFeatureCacheModule.cs" />
+    <Compile Include="Modules\ConfigurationContextFeatureCacheModule.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Fooidity\Fooidity.csproj">

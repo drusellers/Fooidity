@@ -28,7 +28,7 @@
 
             public void LogError(Exception exception)
             {
-                CodeSwitchEvaluated[] switches = _evaluated.ToArray();
+                ICodeSwitchEvaluated[] switches = _evaluated.ToArray();
 
                 Console.WriteLine("{0}\n{1}", exception.Message, string.Join(Environment.NewLine, switches.Select(x => x.CodeFeatureId)));
             }
@@ -45,9 +45,9 @@
             IClass
         {
             readonly ILogger _logger;
-            readonly CodeSwitch<UseNewCodePath> _useNewCodePath;
+            readonly ICodeSwitch<UseNewCodePath> _useNewCodePath;
 
-            public TestClass(ILogger logger, CodeSwitch<UseNewCodePath> useNewCodePath)
+            public TestClass(ILogger logger, ICodeSwitch<UseNewCodePath> useNewCodePath)
             {
                 _logger = logger;
                 _useNewCodePath = useNewCodePath;
@@ -71,9 +71,9 @@
             IClass
         {
             readonly ILogger _logger;
-            readonly CodeSwitch<UseNewCodePath> _useNewCodePath;
+            readonly ICodeSwitch<UseNewCodePath> _useNewCodePath;
 
-            public TestClassV2(ILogger logger, CodeSwitch<UseNewCodePath> useNewCodePath)
+            public TestClassV2(ILogger logger, ICodeSwitch<UseNewCodePath> useNewCodePath)
             {
                 _logger = logger;
                 _useNewCodePath = useNewCodePath;
@@ -121,8 +121,8 @@
             {
                 var builder = new ContainerBuilder();
 
-                builder.RegisterToggle<UseNewCodePath>();
-                builder.RegisterToggle<UseNewClass>();
+                builder.RegisterCodeSwitchToggle<UseNewCodePath>();
+                builder.RegisterCodeSwitchToggle<UseNewClass>();
                 builder.EnableCodeSwitchTracking();
 
                 builder.RegisterType<Logger>()

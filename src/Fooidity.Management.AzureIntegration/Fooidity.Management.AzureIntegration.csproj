@@ -1,0 +1,155 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{64B970E0-FF51-46DF-9C29-FDBA522A126C}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Fooidity.Management.AzureIntegration</RootNamespace>
+    <AssemblyName>Fooidity.Management.AzureIntegration</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\</SolutionDir>
+    <RestorePackages>true</RestorePackages>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.AspNet.Identity.Core">
+      <HintPath>..\packages\Microsoft.AspNet.Identity.Core.2.1.0\lib\net45\Microsoft.AspNet.Identity.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Data.Edm, Version=5.6.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.Data.Edm.5.6.2\lib\net40\Microsoft.Data.Edm.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Data.OData, Version=5.6.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.Data.OData.5.6.2\lib\net40\Microsoft.Data.OData.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Data.Services.Client, Version=5.6.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.Data.Services.Client.5.6.2\lib\net40\Microsoft.Data.Services.Client.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.WindowsAzure.Configuration, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.WindowsAzure.ConfigurationManager.2.0.3\lib\net40\Microsoft.WindowsAzure.Configuration.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.WindowsAzure.Storage, Version=4.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\WindowsAzure.Storage.4.3.0\lib\net40\Microsoft.WindowsAzure.Storage.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.5.0.8\lib\net45\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Spatial, Version=5.6.2.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\System.Spatial.5.6.2\lib\net40\System.Spatial.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="..\SolutionVersion.cs">
+      <Link>Properties\SolutionVersion.cs</Link>
+    </Compile>
+    <Compile Include="AzureManagementSettings.cs" />
+    <Compile Include="Commands\CreateApplicationCommandHandler.cs" />
+    <Compile Include="Commands\CreateApplicationKeyCommandHandler.cs" />
+    <Compile Include="Commands\CreateOrganizationCommandHandler.cs" />
+    <Compile Include="Commands\RegisterCodeFeatureCommandHandler.cs" />
+    <Compile Include="Commands\UpdateApplicationCodeFeatureStateCommandHandler.cs" />
+    <Compile Include="DefaultAzureManagementSettings.cs" />
+    <Compile Include="Entities\ApplicationCodeFeatureEntity.cs" />
+    <Compile Include="Entities\ApplicationCodeFeatureStateEntity.cs" />
+    <Compile Include="Entities\ApplicationEntity.cs" />
+    <Compile Include="Entities\OrganizationApplicationKeyEntity.cs" />
+    <Compile Include="Entities\KeyOrganizationApplicationIndexEntity.cs" />
+    <Compile Include="Entities\OrganizationApplicationIndexEntity.cs" />
+    <Compile Include="Entities\OrganizationEntity.cs" />
+    <Compile Include="Entities\OrganizationUserEntity.cs" />
+    <Compile Include="Entities\UserApplicationIndexEntity.cs" />
+    <Compile Include="Entities\UserOrganizationIndexEntity.cs" />
+    <Compile Include="Exceptions\ApplicationNotFoundException.cs" />
+    <Compile Include="Exceptions\DuplicateEmailException.cs" />
+    <Compile Include="Exceptions\DuplicateUsernameException.cs" />
+    <Compile Include="Exceptions\OrganizationNotFoundException.cs" />
+    <Compile Include="Queries\ApplicationKeyQuery.cs" />
+    <Compile Include="Queries\GetApplicationQueryHandler.cs" />
+    <Compile Include="Queries\GetOrganizationQueryHandler.cs" />
+    <Compile Include="Queries\ListApplicationCodeFeaturesQueryHandler.cs" />
+    <Compile Include="Queries\ListApplicationKeysQueryHandler.cs" />
+    <Compile Include="Queries\ListApplicationsQueryHandler.cs" />
+    <Compile Include="Queries\ListOrganizationsQueryHandler.cs" />
+    <Compile Include="QueryCodeFeatureStateQueryHandler.cs" />
+    <Compile Include="UpdateCodeFeatureStateCommandHandler.cs" />
+    <Compile Include="UserStore\Encoding\Base32BinaryEncodingFormatter.cs" />
+    <Compile Include="UserStore\Encoding\Base32BinaryEncodingParser.cs" />
+    <Compile Include="UserStore\Encoding\HashedHexBinaryEncodingFormatter.cs" />
+    <Compile Include="UserStore\Encoding\HexBinaryEncodingFormatter.cs" />
+    <Compile Include="UserStore\Encoding\HexBinaryEncodingParser.cs" />
+    <Compile Include="UserStore\Encoding\IBinaryEncodingFormatter.cs" />
+    <Compile Include="UserStore\Encoding\IBinaryEncodingParser.cs" />
+    <Compile Include="UserStore\NonSerializedTableStoreAttribute.cs" />
+    <Compile Include="UserStore\UserEntity.cs" />
+    <Compile Include="UserStore\EncodingExtensions.cs" />
+    <Compile Include="UserStore\UserClaimEntity.cs" />
+    <Compile Include="UserStore\UserEmailIndexEntity.cs" />
+    <Compile Include="UserStore\UserLoginEntity.cs" />
+    <Compile Include="UserStore\UserNameIndexEntity.cs" />
+    <Compile Include="UserStore\UserLoginProviderKeyIndexEntity.cs" />
+    <Compile Include="UserStore\UserRoleEntity.cs" />
+    <Compile Include="UserStore\TableUserStore.cs" />
+    <Compile Include="UserStore\Encoding\ZBase32BinaryEncodingFormatter.cs" />
+    <Compile Include="UserStore\Encoding\ZBase32BinaryEncodingParser.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Fooidity.AzureIntegration\Fooidity.AzureIntegration.csproj">
+      <Project>{948cf3ff-e0db-4e06-a0b8-8dd1c74a502c}</Project>
+      <Name>Fooidity.AzureIntegration</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Fooidity.Management\Fooidity.Management.csproj">
+      <Project>{a13612e2-cefb-4ffd-85d8-169a957740ec}</Project>
+      <Name>Fooidity.Management</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Fooidity\Fooidity.csproj">
+      <Project>{e752a7e0-0d9e-4225-9bba-8cff8a963545}</Project>
+      <Name>Fooidity</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('$(SolutionDir)\.nuget\NuGet.targets')" Text="$([System.String]::Format('$(ErrorText)', '$(SolutionDir)\.nuget\NuGet.targets'))" />
+  </Target>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

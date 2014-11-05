@@ -1,0 +1,106 @@
+﻿@using Fooidity.Management.Models
+@model Fooidity.Management.Web.Models.ApplicationViewModel
+
+@{
+    ViewBag.Title = "Application Details";
+}
+
+<h2>Application Details</h2>
+
+<div>
+    <h4>Application</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Id)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Id)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Name)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Name)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.OrganizationId)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.OrganizationId)
+        </dd>
+    </dl>
+
+    <h4>Application Keys</h4>
+    <hr />
+    <p>
+        @Html.ActionLink("Create New", "CreateKey", new { organizationId = Model.OrganizationId, applicationId = Model.Id })
+    </p>
+    <table class="table">
+        <tr>
+            <th>
+                Key
+            </th>
+            <th></th>
+        </tr>
+
+        @foreach (string key in Model.Keys)
+        {
+            <tr>
+                <td>
+                    @key
+                </td>
+                <td>
+                    @*                        @Html.ActionLink("Details", "Details", new { id = item.Id })*@
+                </td>
+            </tr>
+        }
+
+    </table>
+    
+    <h4>Code Features</h4>
+    <hr/>
+    <table class="table">
+        <tr>
+            <th>
+                Code Feature Id
+            </th>
+            <th>
+                Enabled
+            </th>
+            <th>
+                Last Updated (UTC)
+            </th>
+            <th></th>
+        </tr>
+
+        @foreach (var item in Model.Features)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.CodeFeatureId)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Enabled)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.LastUpdated)
+                </td>
+                <td>
+                    @Html.ActionLink("Enable", "Enable", new { applicationId = Model.Id, codeFeatureId = item.CodeFeatureId }) |
+                    @Html.ActionLink("Disable", "Disable", new { applicationId = Model.Id, codeFeatureId = item.CodeFeatureId })
+                </td>
+            </tr>
+        }
+
+    </table>
+
+</div>
+<p>
+    @Html.ActionLink("Back to List", "Index")
+</p>

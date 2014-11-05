@@ -6,7 +6,7 @@
 
     public class DateRangeCodeSwitch<TFeature> :
         IToggleCodeSwitch<TFeature>
-        where TFeature : struct, CodeFeature
+        where TFeature : struct, ICodeFeature
     {
         readonly CurrentTimeProvider _currentTimeProvider;
         readonly Lazy<bool> _enabled;
@@ -26,7 +26,7 @@
             _enabled = new Lazy<bool>(Evaluate);
         }
 
-        public IDisposable Subscribe(IObserver<CodeSwitchEvaluated> observer)
+        public IDisposable Subscribe(IObserver<ICodeSwitchEvaluated> observer)
         {
             return _evaluated.Connect(observer);
         }

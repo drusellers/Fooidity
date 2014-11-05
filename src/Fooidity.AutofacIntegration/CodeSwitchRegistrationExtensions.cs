@@ -14,11 +14,11 @@ namespace Fooidity
         /// that is disabled.
         /// </summary>
         /// <param name="builder"></param>
-        public static void DisableCodeSwitchesByDefault(this ContainerBuilder builder)
+        public static void CodeSwitchesDisabledbyDefault(this ContainerBuilder builder)
         {
             builder.RegisterGeneric(typeof(DisabledCodeSwitch<>))
-                .As(typeof(CodeSwitch<>))
-                .OnActivating(x => OnCodeSwitchActivation(x.Context, (IObservable<CodeSwitchEvaluated>)x.Instance));
+                .As(typeof(ICodeSwitch<>))
+                .OnActivating(x => OnCodeSwitchActivation(x.Context, (IObservable<ICodeSwitchEvaluated>)x.Instance));
         }
 
         /// <summary>
@@ -26,11 +26,11 @@ namespace Fooidity
         /// that is enabled.
         /// </summary>
         /// <param name="builder"></param>
-        public static void EnableCodeSwitchesByDefault(this ContainerBuilder builder)
+        public static void CodeSwitchesEnabledByDefault(this ContainerBuilder builder)
         {
             builder.RegisterGeneric(typeof(EnabledCodeSwitch<>))
-                .As(typeof(CodeSwitch<>))
-                .OnActivating(x => OnCodeSwitchActivation(x.Context, (IObservable<CodeSwitchEvaluated>)x.Instance));
+                .As(typeof(ICodeSwitch<>))
+                .OnActivating(x => OnCodeSwitchActivation(x.Context, (IObservable<ICodeSwitchEvaluated>)x.Instance));
         }
 
         /// <summary>
@@ -38,11 +38,11 @@ namespace Fooidity
         /// </summary>
         /// <typeparam name="TFeature">The CodeSwitch type</typeparam>
         /// <param name="builder">The container builder to register</param>
-        public static void RegisterEnabled<TFeature>(this ContainerBuilder builder)
-            where TFeature : struct, CodeFeature
+        public static void RegisterCodeSwitchEnabled<TFeature>(this ContainerBuilder builder)
+            where TFeature : struct, ICodeFeature
         {
             builder.RegisterType<EnabledCodeSwitch<TFeature>>()
-                .As<CodeSwitch<TFeature>>()
+                .As<ICodeSwitch<TFeature>>()
                 .OnActivating(x => OnCodeSwitchActivation(x.Context, x.Instance));
         }
 
@@ -51,11 +51,11 @@ namespace Fooidity
         /// </summary>
         /// <typeparam name="TFeature">The CodeSwitch type</typeparam>
         /// <param name="builder">The container builder to register</param>
-        public static void RegisterDisabled<TFeature>(this ContainerBuilder builder)
-            where TFeature : struct, CodeFeature
+        public static void RegisterCodeSwitchDisabled<TFeature>(this ContainerBuilder builder)
+            where TFeature : struct, ICodeFeature
         {
             builder.RegisterType<DisabledCodeSwitch<TFeature>>()
-                .As<CodeSwitch<TFeature>>()
+                .As<ICodeSwitch<TFeature>>()
                 .OnActivating(x => OnCodeSwitchActivation(x.Context, x.Instance));
         }
 
@@ -64,12 +64,12 @@ namespace Fooidity
         /// </summary>
         /// <typeparam name="TFeature">The CodeSwitch type</typeparam>
         /// <param name="container">The container to update</param>
-        public static void Enable<TFeature>(this IContainer container)
-            where TFeature : struct, CodeFeature
+        public static void EnableCodeSwitch<TFeature>(this IContainer container)
+            where TFeature : struct, ICodeFeature
         {
             var builder = new ContainerBuilder();
             builder.RegisterType<EnabledCodeSwitch<TFeature>>()
-                .As<CodeSwitch<TFeature>>()
+                .As<ICodeSwitch<TFeature>>()
                 .OnActivated(x => OnCodeSwitchActivation(x.Context, x.Instance))
                 .SingleInstance();
 
@@ -81,12 +81,12 @@ namespace Fooidity
         /// </summary>
         /// <typeparam name="TFeature">The CodeSwitch type</typeparam>
         /// <param name="container">The container to update</param>
-        public static void Disable<TFeature>(this IContainer container)
-            where TFeature : struct, CodeFeature
+        public static void DisableCodeSwitch<TFeature>(this IContainer container)
+            where TFeature : struct, ICodeFeature
         {
             var builder = new ContainerBuilder();
             builder.RegisterType<DisabledCodeSwitch<TFeature>>()
-                .As<CodeSwitch<TFeature>>()
+                .As<ICodeSwitch<TFeature>>()
                 .OnActivating(x => OnCodeSwitchActivation(x.Context, x.Instance))
                 .SingleInstance();
 
@@ -98,25 +98,25 @@ namespace Fooidity
         /// </summary>
         /// <typeparam name="TFeature">The code feature</typeparam>
         /// <param name="builder">The container builder</param>
-        /// <param name="enabled">True if the toggle should be enabled initially</param>
-        public static void RegisterToggle<TFeature>(this ContainerBuilder builder, bool enabled = false)
-            where TFeature : struct, CodeFeature
+        /// <param name="initial">True if the toggle should be enabled initially</param>
+        public static void RegisterCodeSwitchToggle<TFeature>(this ContainerBuilder builder, bool initial = false)
+            where TFeature : struct, ICodeFeature
         {
-            builder.Register(context => new ToggleSwitchState<TFeature>(enabled))
+            builder.Register(context => new ToggleSwitchState<TFeature>(initial))
                 .As<IToggleSwitchState<TFeature>>()
                 .SingleInstance();
 
             builder.RegisterType<ToggleCodeSwitch<TFeature>>()
-                .As<CodeSwitch<TFeature>>()
+                .As<ICodeSwitch<TFeature>>()
                 .As<IToggleCodeSwitch<TFeature>>()
                 .OnActivating(x => OnCodeSwitchActivation(x.Context, x.Instance));
         }
 
         public static void RegisterCodeSwitch<TFeature>(this ContainerBuilder builder)
-            where TFeature : struct, CodeFeature
+            where TFeature : struct, ICodeFeature
         {
             builder.RegisterType<CodeFeatureStateCodeSwitch<TFeature>>()
-                .As<CodeSwitch<TFeature>>()
+                .As<ICodeSwitch<TFeature>>()
                 .OnActivating(x => OnCodeSwitchActivation(x.Context, x.Instance));
         }
 
@@ -128,10 +128,10 @@ namespace Fooidity
         /// <typeparam name="TContext">The switch context</typeparam>
         /// <param name="builder"></param>
         /// <param name="throwIfContextNotFound">If the context is not available, throw an exception</param>
-        public static void RegisterContextSwitch<TFeature, TContext>(this ContainerBuilder builder, bool throwIfContextNotFound = false)
-            where TFeature : struct, CodeFeature
+        public static void RegisterContextCodeSwitch<TFeature, TContext>(this ContainerBuilder builder, bool throwIfContextNotFound = false)
+            where TFeature : struct, ICodeFeature
         {
-            builder.Register<CodeSwitch<TFeature>>(context =>
+            builder.Register<ICodeSwitch<TFeature>>(context =>
             {
                 // this gives a cleaner error message than a container exception
                 TContext switchContext;
@@ -148,13 +148,13 @@ namespace Fooidity
 
                 return new ContextFeatureStateCodeSwitch<TFeature, TContext>(cache, contextCache, switchContext);
             })
-                .As<CodeSwitch<TFeature>>()
+                .As<ICodeSwitch<TFeature>>()
                 .OnActivating(x => OnCodeSwitchActivation(x.Context, x.Instance));
         }
 
-        static void OnCodeSwitchActivation(IComponentContext context, IObservable<CodeSwitchEvaluated> observable)
+        static void OnCodeSwitchActivation(IComponentContext context, IObservable<ICodeSwitchEvaluated> observable)
         {
-            IEnumerable<IObserver<CodeSwitchEvaluated>> observers;
+            IEnumerable<IObserver<ICodeSwitchEvaluated>> observers;
             if (context.TryResolve(out observers))
             {
                 foreach (var observer in observers)

@@ -4,10 +4,10 @@
     using System.Collections.Generic;
     using Autofac;
     using Autofac.Core;
-    using AutofacIntegration;
     using Contexts;
     using Contracts;
     using Features;
+    using Modules;
     using NUnit.Framework;
 
 
@@ -21,7 +21,7 @@
             {
                 using (ILifetimeScope scope = _container.BeginLifetimeScope())
                 {
-                    var codeSwitch = scope.Resolve<CodeSwitch<UseNewCodePath>>();
+                    var codeSwitch = scope.Resolve<ICodeSwitch<UseNewCodePath>>();
                 }
             });
 
@@ -35,7 +35,7 @@
                 ILifetimeScope scope =
                     _container.BeginLifetimeScope(x => x.RegisterInstance(new UserContext {Name = "Chris"})))
             {
-                var codeSwitch = scope.Resolve<CodeSwitch<UseNewCodePath>>();
+                var codeSwitch = scope.Resolve<ICodeSwitch<UseNewCodePath>>();
 
                 Assert.IsTrue(codeSwitch.Enabled);
 
@@ -43,9 +43,9 @@
 
                 Assert.AreEqual("No", repository.IsDbEnabled);
 
-                IEnumerable<CodeSwitchEvaluated> codeSwitchesEvaluated = scope.GetCodeSwitchesEvaluated();
+                IEnumerable<ICodeSwitchEvaluated> codeSwitchesEvaluated = scope.GetEvaluatedCodeSwitches();
 
-                foreach (CodeSwitchEvaluated evaluated in codeSwitchesEvaluated)
+                foreach (ICodeSwitchEvaluated evaluated in codeSwitchesEvaluated)
                     Console.WriteLine("{0}: {1}", evaluated.CodeFeatureId, evaluated.Enabled);
             }
         }
@@ -57,13 +57,13 @@
                 ILifetimeScope scope =
                     _container.BeginLifetimeScope(x => x.RegisterInstance(new UserContext {Name = "David"})))
             {
-                var codeSwitch = scope.Resolve<CodeSwitch<UseNewCodePath>>();
+                var codeSwitch = scope.Resolve<ICodeSwitch<UseNewCodePath>>();
 
                 Assert.IsFalse(codeSwitch.Enabled);
 
-                IEnumerable<CodeSwitchEvaluated> codeSwitchesEvaluated = scope.GetCodeSwitchesEvaluated();
+                IEnumerable<ICodeSwitchEvaluated> codeSwitchesEvaluated = scope.GetEvaluatedCodeSwitches();
 
-                foreach (CodeSwitchEvaluated evaluated in codeSwitchesEvaluated)
+                foreach (ICodeSwitchEvaluated evaluated in codeSwitchesEvaluated)
                     Console.WriteLine("{0}: {1}", evaluated.CodeFeatureId, evaluated.Enabled);
             }
         }
@@ -85,7 +85,7 @@
             builder.RegisterModule<ConfigurationContextFeatureCacheModule<UserContext, UserContextKeyProvider>>();
 
             builder.RegisterCodeSwitch<DbEnabled>();
-            builder.RegisterContextSwitch<UseNewCodePath, UserContext>(true);
+            builder.RegisterContextCodeSwitch<UseNewCodePath, UserContext>(true);
 
             builder.EnableCodeSwitchTracking();
 
@@ -97,9 +97,9 @@
 
         class Repository
         {
-            readonly CodeSwitch<DbEnabled> _dbEnabled;
+            readonly ICodeSwitch<DbEnabled> _dbEnabled;
 
-            public Repository(CodeSwitch<DbEnabled> dbEnabled)
+            public Repository(ICodeSwitch<DbEnabled> dbEnabled)
             {
                 _dbEnabled = dbEnabled;
             }

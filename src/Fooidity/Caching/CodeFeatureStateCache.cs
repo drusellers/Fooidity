@@ -1,7 +1,9 @@
 ﻿namespace Fooidity.Caching
 {
     using System;
+    using System.Collections.Generic;
     using System.Threading;
+    using System.Threading.Tasks;
     using Configuration;
     using Contracts;
     using Internals;
@@ -15,72 +17,70 @@
         ICodeFeatureStateCache,
         IReloadCache,
         IUpdateCodeFeatureCache,
-        IObservable<CodeFeatureStateCacheLoaded>,
-        IObservable<CodeFeatureStateCacheUpdated>
+        IObservable<ICodeFeatureStateCacheLoaded>,
+        IObservable<ICodeFeatureStateCacheUpdated>
     {
-        readonly Connectable<IObserver<CodeFeatureStateCacheLoaded>> _cacheLoaded;
+        readonly Connectable<IObserver<ICodeFeatureStateCacheLoaded>> _cacheLoaded;
         readonly ICodeFeatureStateCacheProvider _cacheProvider;
-        readonly Connectable<IObserver<CodeFeatureStateCacheUpdated>> _cacheUpdated;
+        readonly Connectable<IObserver<ICodeFeatureStateCacheUpdated>> _cacheUpdated;
         ICodeFeatureStateCacheInstance _cache;
 
         public CodeFeatureStateCache(ICodeFeatureStateCacheProvider cacheProvider)
         {
             _cacheProvider = cacheProvider;
 
-            _cacheLoaded = new Connectable<IObserver<CodeFeatureStateCacheLoaded>>();
-            _cacheUpdated = new Connectable<IObserver<CodeFeatureStateCacheUpdated>>();
+            _cacheLoaded = new Connectable<IObserver<ICodeFeatureStateCacheLoaded>>();
+            _cacheUpdated = new Connectable<IObserver<ICodeFeatureStateCacheUpdated>>();
 
-            _cache = _cacheProvider.Load();
+            _cache = Task.Run(async () => await LoadCache()).Result;
         }
 
-        public bool TryGetState<TFeature>(out CodeFeatureState featureState)
+        public bool TryGetState<TFeature>(out ICachedCodeFeatureState featureState)
         {
             if (_cache.TryGetState(CodeFeatureMetadata<TFeature>.Id, out featureState))
                 return true;
 
-            if (_cache.DefaultState)
-            {
-                featureState = new DefaultCodeFeatureState<TFeature>(true);
-                return true;
-            }
+            if (!_cache.DefaultState)
+                return false;
 
-            return false;
+            featureState = new DefaultCodeFeatureState<TFeature>(true);
+            return true;
         }
 
-        public IDisposable Subscribe(IObserver<CodeFeatureStateCacheLoaded> observer)
+        public IDisposable Subscribe(IObserver<ICodeFeatureStateCacheLoaded> observer)
         {
             return _cacheLoaded.Connect(observer);
         }
 
-        public IDisposable Subscribe(IObserver<CodeFeatureStateCacheUpdated> observer)
+        public IDisposable Subscribe(IObserver<ICodeFeatureStateCacheUpdated> observer)
         {
             return _cacheUpdated.Connect(observer);
         }
 
-        public void ReloadCache()
+        public async Task ReloadCache()
         {
             DateTime startTime = DateTime.UtcNow;
-            ICodeFeatureStateCacheInstance cache = _cacheProvider.Load();
+            ICodeFeatureStateCacheInstance cache = await LoadCache();
             DateTime endTime = DateTime.UtcNow;
 
             Interlocked.Exchange(ref _cache, cache);
 
-            var loaded = new Loaded(startTime, endTime - startTime, cache.Count);
+            var loaded = new CodeFeatureStateCacheLoaded(startTime, endTime - startTime, cache.Count);
 
             _cacheLoaded.ForEach(x => x.OnNext(loaded));
         }
 
-        public void UpdateCache(UpdateCodeFeature update)
+        public void UpdateCache(IUpdateCodeFeature update)
         {
             CodeFeatureId codeFeatureId = update.CodeFeatureId;
 
-            CodeFeatureState existingFeatureState;
+            ICachedCodeFeatureState existingFeatureState;
             if (_cache.TryGetState(codeFeatureId, out existingFeatureState))
             {
                 if (existingFeatureState.Enabled == update.Enabled)
                     return;
 
-                var updatedFeatureState = new CodeFeatureStateImpl(codeFeatureId, update.Enabled);
+                var updatedFeatureState = new CachedCodeFeatureState(codeFeatureId, update.Enabled);
 
                 DateTime startTime = DateTime.UtcNow;
                 bool updated = _cache.TryUpdate(codeFeatureId, updatedFeatureState, existingFeatureState);
@@ -88,7 +88,8 @@
 
                 if (updated)
                 {
-                    var updatedEvent = new Updated(startTime, endTime - startTime, updatedFeatureState.Id, updatedFeatureState.Enabled,
+                    var updatedEvent = new CodeFeatureStateCacheUpdated(startTime, endTime - startTime, updatedFeatureState.Id,
+                        updatedFeatureState.Enabled,
                         update.CommandId);
 
                     _cacheUpdated.ForEach(x => x.OnNext(updatedEvent));
@@ -96,7 +97,7 @@
             }
             else
             {
-                var featureState = new CodeFeatureStateImpl(codeFeatureId, update.Enabled);
+                var featureState = new CachedCodeFeatureState(codeFeatureId, update.Enabled);
 
                 DateTime startTime = DateTime.UtcNow;
                 bool updated = _cache.TryAdd(codeFeatureId, featureState);
@@ -104,115 +105,23 @@
 
                 if (updated)
                 {
-                    var updatedEvent = new Updated(startTime, endTime - startTime, featureState.Id, featureState.Enabled, update.CommandId);
+                    var updatedEvent = new CodeFeatureStateCacheUpdated(startTime, endTime - startTime, featureState.Id,
+                        featureState.Enabled, update.CommandId);
 
                     _cacheUpdated.ForEach(x => x.OnNext(updatedEvent));
                 }
             }
         }
 
-
-        class Loaded :
-            CodeFeatureStateCacheLoaded
+        async Task<ICodeFeatureStateCacheInstance> LoadCache()
         {
-            readonly int _codeFeatureCount;
-            readonly TimeSpan _duration;
-            readonly Guid _eventId;
-            readonly Host _host;
-            readonly DateTime _timestamp;
+            IEnumerable<ICachedCodeFeatureState> states = await _cacheProvider.Load();
 
-            public Loaded(DateTime timestamp, TimeSpan duration, int codeFeatureCount)
-            {
-                _eventId = Guid.NewGuid();
-                _timestamp = timestamp;
-                _duration = duration;
-                _codeFeatureCount = codeFeatureCount;
-                _host = HostMetadata.Host;
-            }
+            var cache = new InMemoryCache<CodeFeatureId, ICachedCodeFeatureState>();
+            foreach (ICachedCodeFeatureState state in states)
+                cache.TryAdd(state.Id, state);
 
-            public Guid EventId
-            {
-                get { return _eventId; }
-            }
-
-            public DateTime Timestamp
-            {
-                get { return _timestamp; }
-            }
-
-            public TimeSpan Duration
-            {
-                get { return _duration; }
-            }
-
-            public int CodeFeatureCount
-            {
-                get { return _codeFeatureCount; }
-            }
-
-            public Host Host
-            {
-                get { return _host; }
-            }
-        }
-
-
-        class Updated :
-            CodeFeatureStateCacheUpdated
-        {
-            readonly Uri _codeFeatureId;
-            readonly Guid? _commandId;
-            readonly TimeSpan _duration;
-            readonly bool _enabled;
-            readonly Guid _eventId;
-            readonly Host _host;
-            readonly DateTime _timestamp;
-
-            public Updated(DateTime timestamp, TimeSpan duration, CodeFeatureId codeFeatureId, bool enabled, Guid? commandId = null)
-            {
-                _eventId = Guid.NewGuid();
-                _timestamp = timestamp;
-                _duration = duration;
-                _codeFeatureId = codeFeatureId;
-                _enabled = enabled;
-                _commandId = commandId;
-                _host = HostMetadata.Host;
-            }
-
-            public Host Host
-            {
-                get { return _host; }
-            }
-
-            public Guid EventId
-            {
-                get { return _eventId; }
-            }
-
-            public DateTime Timestamp
-            {
-                get { return _timestamp; }
-            }
-
-            public Guid? CommandId
-            {
-                get { return _commandId; }
-            }
-
-            public TimeSpan Duration
-            {
-                get { return _duration; }
-            }
-
-            public Uri CodeFeatureId
-            {
-                get { return _codeFeatureId; }
-            }
-
-            public bool Enabled
-            {
-                get { return _enabled; }
-            }
+            return new CodeFeatureStateCacheInstance(cache, _cacheProvider.GetDefaultState().Result);
         }
     }
 }
